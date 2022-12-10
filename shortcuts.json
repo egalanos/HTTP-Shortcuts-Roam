@@ -1,0 +1,116 @@
+{
+  "categories": [
+    {
+      "id": "13ac6fe9-e79b-41d4-b053-5b1d7af1139f",
+      "name": "Shortcuts",
+      "shortcuts": [
+        {
+          "codeOnPrepare": "const captureText \u003d getVariable(/*[variable]*/\"f4c3d24f-5cba-4442-9770-d4cbeea45506\"/*[/variable]*/); // run first to prevent delays\n\nroamApiSettingsVerifyFast();\n\nconst suffix \u003d getVariable(/*[variable]*/\"ffada9b3-4c3a-4197-be35-b6c911f4b190\"/*[/variable]*/);\nconst blockText \u003d `${captureText.trim()}${suffix.trim() \u0026\u0026 ` ${suffix.trim()}`}`;\n\nlet parentUid;\nconst destination \u003d getVariable(/*[variable]*/\"7f0c5e2f-ea51-4637-863b-90c94ab31d34\"/*[/variable]*/);\nif (destination) {\n  if (destination.startsWith(\u0027((\u0027) \u0026\u0026 destination.endsWith(\u0027))\u0027)) { // block reference\n    parentUid \u003d destination.slice(2, -2);\n  } else {\n    parentUid \u003d roamPageTitleUid(destination);\n    if (parentUid \u003d\u003d\u003d null) {\n      alert(`Error: Unable to find page titled \u0027${destination}\u0027`);\n      abort();\n    }\n  }\n} else {\n  const { title, uid } \u003d roamDailyNotePage();\n  parentUid \u003d uid;\n  roamCreatePage(title);\n}\n\nconst result \u003d roamCreateBlock(parentUid, blockText);\nresultNotifyUser(result, \u0027Block captured successfully!\u0027, \u0027Block capture failure\u0027);",
+          "description": "Capture a block to your graph",
+          "executionType": "scripting",
+          "iconName": "custom-icon_x1670331278505.png",
+          "id": "2a2720d5-17d0-4caa-9bb9-44ca61d71172",
+          "launcherShortcut": true,
+          "name": "Roam Quick Capture",
+          "quickSettingsTileShortcut": true,
+          "url": ""
+        },
+        {
+          "codeOnPrepare": "const settings \u003d [ { name:\u0027ROAM_GRAPH_NAME\u0027, message:\u0027What is your Roam Graph name?\u0027, prefill:\u0027\u0027 },\n                   { name:\u0027ROAM_GRAPH_TOKEN\u0027, message:\u0027What is your Roam Graph API token?\u0027, prefill:\u0027roam-graph-token-\u0027 },\n                   { name:\u0027ROAM_CAPTURE_DEST\u0027, message:\"Captured text save destination: Page title, block ref, or leave blank for today\u0027s daily note page\", prefill:\u0027\u0027 },\n                   { name:\u0027ROAM_CAPTURE_TEXT_SUFFIX\u0027, message:\"Text to add to the end of the captured block\", prefill:\u0027\u0027 }\n                 ];\n                   \nfunction roamSettingsPrompt() {\n  settings.forEach( ({ name, message, prefill }) \u003d\u003e {\n    let existing \u003d getVariable(name).trim();\n    prefill \u003d existing || prefill;\n    let answer \u003d prompt(message, prefill);\n    if (answer \u003d\u003d\u003d null) {\n      abort();\n    }\n    setVariable(name, answer.trim());\n  });\n}\n\nfunction roamApiSettingsVerify() {\n  \n  showToast(\u0027Verifying settings...\u0027);\n  \n  const graphName \u003d getVariable(/*[variable]*/\"eadf94b1-636f-49f4-bd32-92d61fd73061\"/*[/variable]*/);\n  if (!graphName) {\n    alert(\u0027Graph name is empty\u0027);\n    return false;\n  }\n\n  const graphToken \u003d getVariable(/*[variable]*/\"82934454-36c2-4689-9050-aa09329ee9d4\"/*[/variable]*/);\n  if (!graphToken) {\n    alert(\u0027Graph token is empty\u0027);\n    return false;\n  }\n  \n  // Verify graph API credentials\n  let credentialsVerified \u003d false;\n  let result \u003d roamQuery(\u0027[:find ?graph :where [_ :graph/name ?graph]]\u0027);\n  if (result.status \u003d\u003d\u003d \u0027success\u0027 \u0026\u0026 result.response.statusCode \u003d\u003d 200) {\n    const graphNameResult \u003d JSON.parse(result.response.body).result[0][0];\n    credentialsVerified \u003d (graphNameResult \u003d\u003d\u003d graphName);\n  }\n  if (!credentialsVerified) {\n    resultNotifyUser(result, \u0027API credentials verification failure\u0027, \u0027API credentials verification failure\u0027);\n    return false;\n  }\n\n  // Resolve and verify capture destination\n  let destination \u003d getVariable(/*[variable]*/\"7f0c5e2f-ea51-4637-863b-90c94ab31d34\"/*[/variable]*/);\n  if (destination) {\n    let destinationVerified \u003d false;\n    \n    if (destination.startsWith(\u0027((\u0027) \u0026\u0026 destination.endsWith(\u0027))\u0027)) { // block reference\n      let blockUid \u003d destination.slice(2, -2);\n      result \u003d roamQuery(\u0027[:find (count ?e) :in $ ?uid :where [?e :block/uid ?uid]]\u0027, [ blockUid ]);\n      if (result.status \u003d\u003d\u003d \u0027success\u0027 \u0026\u0026 result.response.statusCode \u003d\u003d 200) {\n        const answer \u003d JSON.parse(result.response.body).result;\n        destinationVerified \u003d (answer.length \u003d\u003d 1 \u0026\u0026 answer[0][0] \u003d\u003d 1);\n      }\n    } else { // Page title\n      const query \u003d \u0027[:find ?uid :in $ ?title :where [?e :block/uid ?uid][?e :node/title ?title]]\u0027\n      const result \u003d roamQuery(query, [ destination ]);\n      if (result.status \u003d\u003d\u003d \u0027success\u0027 \u0026\u0026 result.response.statusCode \u003d\u003d 200) {\n        const answer \u003d JSON.parse(result.response.body).result;\n        destinationVerified \u003d (answer.length \u003d\u003d 1 \u0026\u0026 answer[0][0].length \u003e\u003d 9); // is that the case?\n      }\n    }\n    \n    if (!destinationVerified) {\n      resultNotifyUser(result, `Destination ${destination} is not valid`, \u0027Destination verification failure\u0027);\n      return false;\n    }\n  }\n  \n  showToast(\u0027Settings verified!\u0027);\n  return true;\n}\n\ndo {\n  roamSettingsPrompt();\n} while (!roamApiSettingsVerify());\n",
+          "description": "Change Roam API settings",
+          "executionType": "scripting",
+          "iconName": "flat_grey_gear",
+          "id": "c97e08a0-755b-4d84-a819-8e584434a49c",
+          "name": "Roam Graph Settings",
+          "url": ""
+        }
+      ]
+    },
+    {
+      "hidden": true,
+      "id": "a5014f01-0617-4531-ada2-4427751a5c98",
+      "name": "helpers ",
+      "shortcuts": [
+        {
+          "acceptCookies": false,
+          "authToken": "{{82934454-36c2-4689-9050-aa09329ee9d4}}",
+          "authentication": "bearer",
+          "bodyContent": "{{7a9be655-604f-4c4a-b0e0-a12a21fcb65b}}",
+          "codeOnFailure": "setVariable(/*[variable]*/\"23ca1b86-49a0-425b-b2f6-c603a012170b\"/*[/variable]*/, \u0027\u0027);",
+          "codeOnPrepare": "const graphName \u003d getVariable(/*[variable]*/\"eadf94b1-636f-49f4-bd32-92d61fd73061\"/*[/variable]*/);\nconst route \u003d getVariable(/*[variable]*/\"40e81982-e28a-47c5-a3d8-a7925263d540\"/*[/variable]*/);\n\nlet requestUrl \u003d getVariable(/*[variable]*/\"23ca1b86-49a0-425b-b2f6-c603a012170b\"/*[/variable]*/);\nlet endpoint \u003d `https://api.roamresearch.com/api/graph/${graphName}/${route}`;\n\nsetVariable(/*[variable]*/\"23ca1b86-49a0-425b-b2f6-c603a012170b\"/*[/variable]*/, requestUrl || endpoint);",
+          "codeOnSuccess": "if (response.statusCode \u003d\u003d 307) {\n  // Manually follow redirects to preserve the \u0027Authorization\u0027 request header\n  //  - The header is removed if okhttp3 library follows redirects\n  //  - Relevant RFC: https://httpwg.org/specs/rfc9110.html#status.3xx\n  const result \u003d executeShortcut(shortcut.id, { request_url: response.getHeader(\u0027Location\u0027) });\n    \n  // Saving the result into a variable as the response object can\u0027t be updated based on the\n  // result from the manually followed redirect re-execution.\n  setVariable(/*[variable]*/\"a287dfba-8e6e-4d49-9f87-537a1d7fa356\"/*[/variable]*/, JSON.stringify(result));\n}\n\nsetVariable(/*[variable]*/\"23ca1b86-49a0-425b-b2f6-c603a012170b\"/*[/variable]*/, \u0027\u0027);",
+          "contentType": "application/json",
+          "description": "Roam Backend API request helper shortcut",
+          "followRedirects": false,
+          "headers": [
+            {
+              "id": "eabb3c1c-a67b-4e5a-9968-aba65defe6ee",
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "iconName": "custom-icon_x1670331278505.png",
+          "id": "8edb6f62-a966-4749-827e-e77f15e94651",
+          "method": "POST",
+          "name": "Roam API Request",
+          "responseHandling": {
+            "actions": [
+              "copy"
+            ],
+            "failureOutput": "none",
+            "includeMetaInfo": true,
+            "successMessage": "Block added successfully",
+            "successOutput": "none",
+            "uiType": "dialog"
+          },
+          "url": "{{23ca1b86-49a0-425b-b2f6-c603a012170b}}"
+        }
+      ]
+    }
+  ],
+  "globalCode": "function roamApiSettingsVerifyFast() {\n  if (!getVariable(\u0027ROAM_GRAPH_NAME\u0027) || !getVariable(\u0027ROAM_GRAPH_TOKEN\u0027)) {\n    executeShortcut(\u0027Roam Graph Settings\u0027);\n  }\n}\n\nfunction roamCreateBlock(parentUid, text) {\n  const body \u003d `{ \n    \"action\": \"create-block\",\n    \"location\": {\n      \"parent-uid\": ${JSON.stringify(parentUid)},\n      \"order\": \"last\"\n    },\n    \"block\": {\n      \"string\": ${JSON.stringify(text)}\n    }\n  }`;\n  return roamRequest(\u0027write\u0027, body);\n}\n\nfunction roamCreatePage(title) {\n  const body \u003d `{\n    \"action\": \"create-page\",\n    \"page\": {\n      \"title\": ${JSON.stringify(title)}\n    }\n  }`;\n  return roamRequest(\u0027write\u0027, body);   \n}\n\nfunction roamQuery(query, args \u003d []) {\n  const body \u003d `{\n    \"query\": ${JSON.stringify(query)},\n    \"args\": ${JSON.stringify(args)}\n  }`;\n  return roamRequest(\u0027q\u0027, body);  \n}\n\nfunction roamPageTitleUid(title) {\n  const query \u003d \u0027[:find ?uid :in $ ?title :where [?e :block/uid ?uid][?e :node/title ?title]]\u0027\n  const result \u003d roamQuery(query, [ title ]);\n  if (result.status \u003d\u003d\u003d \u0027success\u0027 \u0026\u0026 result.response.statusCode \u003d\u003d 200) {\n    const answer \u003d JSON.parse(result.response.body).result;\n    if (answer.length \u003d\u003d 1) {\n      return answer[0][0];\n    }\n  }\n  return null;\n}\n\nfunction roamRequest(route, body) {\n  let result \u003d executeShortcut(\u0027Roam API Request\u0027, { request_route: route, request_body: body });\n  if (result.status \u003d\u003d\u003d \u0027success\u0027 \u0026\u0026 result.response.statusCode \u003d\u003d 307) {\n    // Work around our manually handled redirects to provide the actual result\n    result \u003d JSON.parse(getVariable(\u0027result\u0027));\n    setVariable(\u0027result\u0027, \u0027\u0027);\n  }\n  return result;\n}\n\nfunction resultNotifyUser(result, successMsg \u003d \u0027Success\u0027, failureMsg \u003d \u0027Failure\u0027) {\n  if (result.status \u003d\u003d\u003d \u0027success\u0027) {\n    if (result.response.statusCode \u003d\u003d 200) {\n      showToast(successMsg);\n    } else {\n      alert(`Confused success: ${JSON.stringify(result.response)}`);\n    }\n  } else if (result.status \u003d\u003d\u003d \u0027failure\u0027) {\n    if (result.networkError) {\n      alert(`${failureMsg}: ${result.networkError}`);\n    } else {\n      alert(`${failureMsg}: ${result.response.body}`);\n    }\n  } else if (result.status \u003d\u003d\u003d \u0027unknown\u0027) {\n    alert(\u0027Unable to make an HTTP request. No WiFi/network service?\u0027);\n  }\n}\n\nfunction roamDailyNotePage(d \u003d new Date()) {\n  const month \u003d [\u0027January\u0027, \u0027February\u0027, \u0027March\u0027, \u0027April\u0027, \u0027May\u0027, \u0027June\u0027, \u0027July\u0027, \u0027August\u0027, \u0027September\u0027, \u0027October\u0027, \u0027November\u0027, \u0027December\u0027];\n  const nth \u003d n \u003d\u003e [\u0027st\u0027, \u0027nd\u0027, \u0027rd\u0027][((n+90)%100-10)%10-1] || \u0027th\u0027; // ordinal number suffix\n  return { title: `${month[d.getMonth()]} ${d.getDate()}${nth(d.getDate())}, ${d.getFullYear()}`,\n           uid:   `${`${d.getMonth()+1}`.padStart(2,\u00270\u0027)}-${`${d.getDate()}`.padStart(2, \u00270\u0027)}-${d.getFullYear()}`};\n}",
+  "title": "Shortcuts",
+  "variables": [
+    {
+      "flags": 3,
+      "id": "f4c3d24f-5cba-4442-9770-d4cbeea45506",
+      "key": "capture_text",
+      "message": "What\u0027s on your mind?",
+      "title": "Quick Capture",
+      "type": "text"
+    },
+    {
+      "id": "7f0c5e2f-ea51-4637-863b-90c94ab31d34",
+      "key": "ROAM_CAPTURE_DEST"
+    },
+    {
+      "id": "ffada9b3-4c3a-4197-be35-b6c911f4b190",
+      "key": "ROAM_CAPTURE_TEXT_SUFFIX"
+    },
+    {
+      "id": "eadf94b1-636f-49f4-bd32-92d61fd73061",
+      "key": "ROAM_GRAPH_NAME"
+    },
+    {
+      "id": "82934454-36c2-4689-9050-aa09329ee9d4",
+      "key": "ROAM_GRAPH_TOKEN"
+    },
+    {
+      "id": "23ca1b86-49a0-425b-b2f6-c603a012170b",
+      "key": "request_url"
+    },
+    {
+      "id": "7a9be655-604f-4c4a-b0e0-a12a21fcb65b",
+      "key": "request_body"
+    },
+    {
+      "id": "40e81982-e28a-47c5-a3d8-a7925263d540",
+      "key": "request_route"
+    },
+    {
+      "id": "a287dfba-8e6e-4d49-9f87-537a1d7fa356",
+      "key": "result"
+    }
+  ],
+  "version": 54
+}

@@ -23,7 +23,7 @@ This is a shortcut for the Android app [HTTP Shortcuts](https://http-shortcuts.r
  1. Install **HTTP Request Shortcuts** from the [Google Play Store](https://play.google.com/store/apps/details?id=ch.rmy.android.http_shortcuts)
 
 
- 1. Import shortcut by tapping this [Android deeplink](http-shortcuts://import?url=https%3A%2F%2Fgithub.com%2Fegalanos%2FHTTP-Shortcuts-Roam%2Freleases%2Flatest%2Fdownload%2Fshortcuts-roam.zip)
+ 1. Import shortcut by tapping this [Android deeplink](<http-shortcuts://import?url=https%3A%2F%2Fgithub.com%2Fegalanos%2FHTTP-Shortcuts-Roam%2Freleases%2Flatest%2Fdownload%2Fshortcuts-roam.zip>)
     , or manually:
 
      1. Download [shortcuts-roam.zip](https://github.com/egalanos/HTTP-Shortcuts-Roam/releases/latest/download/shortcuts-roam.zip)

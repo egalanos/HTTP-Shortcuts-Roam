@@ -37,27 +37,29 @@ This is a shortcut for the Android app [HTTP Shortcuts](https://http-shortcuts.r
 
      then tap the back arrow to get to the app main screen
 
+ 1. Create a Roam graph API token
+
+    1. Log in to Roam in a new browser tab at https://relemma-git-feat-frontdesk.roamresearch.com/ [^2]
+
+    1. Open your graph, then select the *Full site* version (top right corner)
+
+    1. Tap the `Share, export, and more` menu (three horizontal dots top right),
+       then `Settings`, and then `Graph`
+
+    1. Tap `+ New API Token`
+
+       |Descriptor|Access Scope|
+       |----------|------------|
+       | `HTTP Shortcuts` | **edit access** |
+       * Tap `Create`
+
+     1. Copy the token, then switch back to the HTTP Shortcuts app
+
  1. Tap the `Roam graph settings` shortcut:
 
     1. Enter your graph name
 
-    1. Create and enter your graph token:
-
-         1. Log in to Roam at https://relemma-git-feat-frontdesk.roamresearch.com/ [^2]
-
-         1. Open your graph, then select the Full site version
-
-         1. Tap on the `Share, export, and more` menu (three horizontal dots top right),
-            then `Settings`, and then `Graph`
-
-         1. Tap `+ New API Token`
-
-            |Descriptor|Access Scope|
-            |----------|------------|
-            | `HTTP Shortcuts` | **edit access** |
-            * Tap `Create`
-
-         1. Copy the token, then switch back to the HTTP Shortcuts app and paste it 
+    1. Enter your graph token
 
     1. Follow the remaining prompts
 

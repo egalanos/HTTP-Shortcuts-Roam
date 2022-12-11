@@ -35,7 +35,7 @@ This is a shortcut for the Android app [HTTP Shortcuts](https://http-shortcuts.r
          1. Select the downloaded file
       </details>
 
-     then tap the back arrow to get to the app main screen
+     switch out of the app and reopen it to see the new shortcuts
 
  1. Create a Roam graph API token
 
